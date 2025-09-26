@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>已分析歌曲 - 音乐搜索平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        .container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .header-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .songs-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .song-item {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .song-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .song-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .song-info {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .song-stats {
+            margin-top: 0.5rem;
+        }
+        
+        .stat-badge {
+            display: inline-block;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            color: #666;
+        }
+        
+        .platform-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+        
+        .analyzed-time {
+            color: #999;
+            font-size: 0.8rem;
+            float: right;
+        }
+        
+        .view-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .view-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .pagination {
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .pagination .page-link {
+            border-radius: 10px;
+            margin: 0 0.2rem;
+            border: none;
+            color: #667eea;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .manage-btn {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            margin-left: 1rem;
+        }
+        
+        .manage-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+            color: white;
+        }
+        
+        .management-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .checkbox-column {
+            width: 40px;
+            text-align: center;
+        }
+        
+        .delete-btn {
+            background: linear-gradient(45deg, #f5576c, #f093fb);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+            color: white;
+        }
+        
+        .password-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .password-modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部区域 -->
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-2">
+                        <i class="fas fa-music text-primary me-2"></i>
+                        已分析歌曲
+                    </h1>
+                    <p class="text-muted mb-0">查看您之前分析过的歌曲记录</p>
+                </div>
+                <div>
+                    <a href="/" class="back-btn">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        返回首页
+                    </a>
+                    <button class="manage-btn" id="toggleManage">
+                        <i class="fas fa-cog me-2"></i>
+                        管理
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 统计信息 -->
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <h3 class="text-primary mb-1" id="totalCount">-</h3>
+                        <small class="text-muted">总分析数</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <h3 class="text-success mb-1" id="lyricsCount">-</h3>
+                        <small class="text-muted">有歌词</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <h3 class="text-warning mb-1" id="avgWords">-</h3>
+                        <small class="text-muted">平均字数</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 歌曲列表 -->
+        <div class="songs-card">
+            <!-- 管理面板 -->
+            <div class="management-panel" id="managementPanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks me-2"></i>
+                        批量管理
+                        <span class="badge bg-primary ms-2">已选 <span id="selectedCount">0</span> 条</span>
+                    </h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="selectAll()">
+                            <i class="fas fa-check-square me-1"></i>全选
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary me-2" onclick="clearSelection()">
+                            <i class="fas fa-square me-1"></i>清空
+                        </button>
+                        <button class="delete-btn btn-sm" onclick="deleteSelected()">
+                            <i class="fas fa-trash me-1"></i>删除选中
+                        </button>
+                    </div>
+                </div>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-info-circle me-1"></i>
+                    选择要删除的歌曲，点击删除按钮需要输入管理密码
+                </p>
+            </div>
+            
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <p class="mt-2 text-muted">正在加载已分析歌曲...</p>
+            </div>
+            
+            <div id="songsList" style="display: none;">
+                <!-- 歌曲列表将在这里动态显示 -->
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-music"></i>
+                <h4>暂无分析记录</h4>
+                <p>您还没有分析过任何歌曲，快去<a href="/" class="text-primary">搜索歌曲</a>开始分析吧！</p>
+            </div>
+            
+            <!-- 分页 -->
+            <nav id="pagination" style="display: none;">
+                <ul class="pagination">
+                    <!-- 分页按钮将在这里动态生成 -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 密码验证模态框 -->
+    <div id="passwordModal" class="password-modal">
+        <div class="password-modal-content">
+            <h4 class="mb-3">
+                <i class="fas fa-lock text-warning me-2"></i>
+                管理员验证
+            </h4>
+            <p class="text-muted mb-3">删除操作需要管理员权限，请输入密码：</p>
+            <div class="mb-3">
+                <input type="password" id="adminPassword" class="form-control" placeholder="请输入管理密码">
+            </div>
+            <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-secondary" onclick="closePasswordModal()">
+                    <i class="fas fa-times me-1"></i>取消
+                </button>
+                <button class="btn btn-danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash me-1"></i>确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 20;
+        
+        // 页面加载时获取歌曲列表
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAnalyzedSongs(1);
+        });
+        
+        // 加载已分析歌曲列表
+        function loadAnalyzedSongs(page = 1) {
+            currentPage = page;
+            
+            fetch(`/analyzed_songs?page=${page}&limit=${pageSize}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    if (data.success && data.data.length > 0) {
+                        displaySongs(data.data);
+                        updateStatistics(data.data, data.total);
+                        displayPagination(data.page, data.total_pages, data.total);
+                        document.getElementById('songsList').style.display = 'block';
+                        document.getElementById('pagination').style.display = 'block';
+                    } else {
+                        document.getElementById('emptyState').style.display = 'block';
+                        updateStatistics([], 0);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载失败:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
+                });
+        }
+        
+        // 显示歌曲列表
+        function displaySongs(songs) {
+            const songsContainer = document.getElementById('songsList');
+            songsContainer.innerHTML = songs.map((song, index) => `
+                <div class="song-item" data-song-id="${song.id}" data-record-id="${song.record_id}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="d-flex align-items-start">
+                            <div class="checkbox-column management-only" style="display: none;">
+                                <input type="checkbox" class="form-check-input song-checkbox" value="${song.record_id}" data-song-data='${JSON.stringify(song)}'>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="song-title">${escapeHtml(song.name)}</div>
+                                <div class="song-info">
+                                    <i class="fas fa-user me-1"></i>${escapeHtml(song.artist)}
+                                    ${song.album ? `<i class=\"fas fa-compact-disc ms-3 me-1\"></i>${escapeHtml(song.album)}` : ''}
+                                </div>
+                                ${(song.lyricist || song.composer) ? `
+                                    <div class="song-info mt-1">
+                                        ${song.lyricist ? `<i class=\"fas fa-pen me-1\"></i>作词: ${escapeHtml(song.lyricist)}` : ''}
+                                        ${song.composer ? `<i class=\"fas fa-music ms-3 me-1\"></i>作曲: ${escapeHtml(song.composer)}` : ''}
+                                    </div>
+                                ` : ''}
+                                <div class="song-stats">
+                                    <span class="stat-badge platform-badge">
+                                        <i class="fas fa-globe me-1"></i>${escapeHtml(song.platform_name)}
+                                    </span>
+                                    <span class="stat-badge">
+                                        <i class="fas fa-list-ol me-1"></i>${song.analysis.lyric_lines}行
+                                    </span>
+                                    <span class="stat-badge">
+                                        <i class="fas fa-font me-1"></i>${song.analysis.word_count}字
+                                    </span>
+                                    <span class="stat-badge ${song.analysis.has_lyrics ? 'text-success' : 'text-warning'}">
+                                        <i class="fas ${song.analysis.has_lyrics ? 'fa-check' : 'fa-times'} me-1"></i>
+                                        ${song.analysis.has_lyrics ? '有歌词' : '无歌词'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="analyzed-time mb-2">
+                                <i class="fas fa-clock me-1"></i>
+                                ${formatDateTime(song.analyzed_at)}
+                            </div>
+                            <button class="btn view-btn" onclick="viewSongDetail('${song.id}', '${song.source}', '${escapeHtml(song.name)}', '${escapeHtml(song.artist)}', '${escapeHtml(song.album)}', '${escapeHtml(song.lyricist)}', '${escapeHtml(song.composer)}')">
+                                <i class="fas fa-eye me-1"></i>查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 更新统计信息
+        function updateStatistics(songs, total) {
+            document.getElementById('totalCount').textContent = total;
+            
+            const lyricsCount = songs.filter(song => song.analysis.has_lyrics).length;
+            document.getElementById('lyricsCount').textContent = total > 0 ? 
+                Math.round((songs.filter(song => song.analysis.has_lyrics).length / songs.length) * total) : 0;
+            
+            const avgWords = songs.length > 0 ? 
+                Math.round(songs.reduce((sum, song) => sum + song.analysis.word_count, 0) / songs.length) : 0;
+            document.getElementById('avgWords').textContent = avgWords;
+        }
+        
+        // 显示分页
+        function displayPagination(currentPage, totalPages, total) {
+            if (totalPages <= 1) {
+                document.getElementById('pagination').style.display = 'none';
+                return;
+            }
+            
+            const pagination = document.querySelector('.pagination');
+            let paginationHTML = '';
+            
+            // 上一页
+            paginationHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadAnalyzedSongs(${currentPage - 1})">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+            
+            // 页码
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadAnalyzedSongs(1)">1</a></li>`;
+                if (startPage > 2) {
+                    paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="loadAnalyzedSongs(${i})">${i}</a>
+                    </li>
+                `;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadAnalyzedSongs(${totalPages})">${totalPages}</a></li>`;
+            }
+            
+            // 下一页
+            paginationHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadAnalyzedSongs(${currentPage + 1})">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHTML;
+        }
+        
+        // 查看歌曲详情
+        function viewSongDetail(songId, source, name = '', artist = '', album = '', lyricist = '', composer = '') {
+            const params = new URLSearchParams({
+                source: source,
+                name: name,
+                artist: artist,
+                album: album,
+                lyricist: lyricist,
+                composer: composer
+            });
+            // 使用统一的分析页面
+            window.open(`/song_analysis/${songId}?${params.toString()}`, '_blank');
+        }
+        
+        // HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minute = 60 * 1000;
+            const hour = 60 * minute;
+            const day = 24 * hour;
+            
+            if (diff < minute) {
+                return '刚刚';
+            } else if (diff < hour) {
+                return Math.floor(diff / minute) + '分钟前';
+            } else if (diff < day) {
+                return Math.floor(diff / hour) + '小时前';
+            } else if (diff < 7 * day) {
+                return Math.floor(diff / day) + '天前';
+            } else {
+                return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'});
+            }
+        }
+        
+        // 管理功能
+        let isManagementMode = false;
+        let selectedSongs = [];
+        
+        // 切换管理模式（保留原#toggleManage按钮逻辑）
+        document.getElementById('toggleManage').addEventListener('click', function() {
+            isManagementMode = !isManagementMode;
+            const managementPanel = document.getElementById('managementPanel');
+            const checkboxes = document.querySelectorAll('.management-only');
+            const button = this;
+            
+            if (isManagementMode) {
+                managementPanel.style.display = 'block';
+                checkboxes.forEach(cb => cb.style.display = 'block');
+                button.innerHTML = '<i class="fas fa-times me-2"></i>退出管理';
+                button.style.background = 'linear-gradient(45deg, #f55776, #f093fb)';
+            } else {
+                managementPanel.style.display = 'none';
+                checkboxes.forEach(cb => cb.style.display = 'none');
+                button.innerHTML = '<i class="fas fa-cog me-2"></i>管理';
+                button.style.background = 'linear-gradient(45deg, #f093fb, #f55776)';
+                clearSelection();
+                updateSelectedSongs();
+            }
+        });
+        
+        // 全选
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('.song-checkbox');
+            checkboxes.forEach(cb => cb.checked = true);
+            updateSelectedSongs();
+        }
+        
+        // 清空选择
+        function clearSelection() {
+            const checkboxes = document.querySelectorAll('.song-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            selectedSongs = [];
+            updateSelectedSongs();
+        }
+        
+        // 更新选中的歌曲
+        function updateSelectedSongs() {
+            selectedSongs = [];
+            const checkboxes = document.querySelectorAll('.song-checkbox:checked');
+            checkboxes.forEach(cb => {
+                const idVal = parseInt(cb.value);
+                if (!isNaN(idVal)) {
+                    selectedSongs.push(idVal);
+                }
+            });
+            const selEl = document.getElementById('selectedCount');
+            if (selEl) selEl.textContent = selectedSongs.length;
+        }
+        
+        // 监听复选框变化
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('song-checkbox')) {
+                updateSelectedSongs();
+            }
+        });
+        
+        // 删除选中的歌曲
+        function deleteSelected() {
+            updateSelectedSongs();
+            if (selectedSongs.length === 0) {
+                alert('请先选择要删除的歌曲');
+                return;
+            }
+            
+            document.getElementById('passwordModal').style.display = 'block';
+        }
+        
+        // 关闭密码模态框
+        function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+        }
+        
+        // 确认删除
+        function confirmDelete() {
+            const password = document.getElementById('adminPassword').value;
+            
+            if (!password) {
+                alert('请输入管理密码');
+                return;
+            }
+            
+            // 发送删除请求
+            fetch('/delete_analyzed_songs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    password: password,
+                    song_ids: selectedSongs
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`${data.message}`);
+                    closePasswordModal();
+                    clearSelection();
+                    // 重新加载数据
+                    loadAnalyzedSongs(currentPage);
+                } else {
+                    alert(`删除失败: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('删除请求失败:', error);
+                alert('删除请求失败，请重试');
+            });
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('passwordModal');
+            if (event.target === modal) {
+                closePasswordModal();
+            }
+        }
+    </script>
+</body>
+</html>

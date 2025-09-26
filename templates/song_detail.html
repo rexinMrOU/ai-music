@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌曲详细信息 - 智能音乐搜索</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --bg-light: #f7fafc;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .song-detail-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .song-header {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin-bottom: 2rem;
+        }
+
+        .song-cover {
+            width: 200px;
+            height: 200px;
+            border-radius: 15px;
+            object-fit: cover;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .song-cover-placeholder {
+            width: 200px;
+            height: 200px;
+            border-radius: 15px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+
+        .song-info h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .song-meta {
+            color: var(--text-light);
+            margin-bottom: 0.3rem;
+        }
+
+        .song-meta strong {
+            color: var(--text-dark);
+        }
+
+        .platform-badge {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+
+        .analysis-section {
+            background: var(--bg-light);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .analysis-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .analysis-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .analysis-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .lyrics-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .lyrics-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .lyrics-content {
+            line-height: 2;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            white-space: pre-line;
+            background: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .no-lyrics {
+            text-align: center;
+            color: var(--text-light);
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        .actions-section {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: white;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .song-header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .song-cover,
+            .song-cover-placeholder {
+                width: 150px;
+                height: 150px;
+                margin: 0 auto;
+            }
+
+            .analysis-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .actions-section {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <a href="/" class="back-btn">
+            <i class="fa fa-arrow-left"></i>
+            返回搜索
+        </a>
+
+        <div id="loadingContainer" class="loading">
+            <i class="fa fa-spinner fa-spin fa-2x"></i>
+            <p class="mt-2">加载歌曲详情中...</p>
+        </div>
+
+        <div id="songDetailContainer" style="display: none;">
+            <!-- 歌曲详细信息将在这里显示 -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 从URL参数获取歌曲信息
+        const urlParams = new URLSearchParams(window.location.search);
+        const songId = urlParams.get('id');
+        const source = urlParams.get('source');
+        const name = urlParams.get('name');
+        const artist = urlParams.get('artist');
+
+        // 页面加载时获取歌曲详情
+        document.addEventListener('DOMContentLoaded', function() {
+            if (songId && source) {
+                loadSongDetail(songId, source, name, artist);
+            } else {
+                showError('缺少必要的歌曲信息参数');
+            }
+        });
+
+        // 加载歌曲详细信息
+        async function loadSongDetail(id, source, name, artist) {
+            try {
+                const response = await fetch(`/song_detail?id=${encodeURIComponent(id)}&source=${encodeURIComponent(source)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                displaySongDetail(data, name, artist);
+            } catch (error) {
+                console.error('获取歌曲详情失败:', error);
+                showError('获取歌曲详情失败');
+            }
+        }
+
+        // 显示歌曲详细信息
+        function displaySongDetail(data, name, artist) {
+            const container = document.getElementById('songDetailContainer');
+            const loading = document.getElementById('loadingContainer');
+
+            const cleanLyric = data.lyric ? data.lyric.replace(/\[\d+:\d+\.\d+\]/g, '').trim() : '';
+
+            const html = `
+                <div class="song-detail-card">
+                    <div class="song-header">
+                        <div>
+                            ${data.cover_url ? 
+                                `<img src="${data.cover_url}" alt="专辑封面" class="song-cover">` :
+                                `<div class="song-cover-placeholder">
+                                    <i class="fa fa-music"></i>
+                                </div>`
+                            }
+                        </div>
+                        <div class="song-info">
+                            <h1>${name || data.name || '未知歌曲'}</h1>
+                            <div class="song-meta">
+                                <strong>歌手:</strong> ${artist || data.artist || '未知歌手'}
+                            </div>
+                            ${data.album ? `
+                                <div class="song-meta">
+                                    <strong>专辑:</strong> ${data.album}
+                                </div>
+                            ` : ''}
+                            ${data.lyricist ? `
+                                <div class="song-meta">
+                                    <strong>作词:</strong> ${data.lyricist}
+                                </div>
+                            ` : ''}
+                            ${data.composer ? `
+                                <div class="song-meta">
+                                    <strong>作曲:</strong> ${data.composer}
+                                </div>
+                            ` : ''}
+                            <div class="platform-badge">${data.platform_name}</div>
+                        </div>
+                    </div>
+
+                    <div class="actions-section">
+                        <button class="action-btn btn-primary" onclick="getPlayUrl('${data.id}', '${data.source}')">
+                            <i class="fa fa-play"></i> 播放歌曲
+                        </button>
+                        <button class="action-btn btn-secondary" onclick="downloadLyrics()">
+                            <i class="fa fa-download"></i> 下载歌词
+                        </button>
+                        <button class="action-btn btn-secondary" onclick="shareSong()">
+                            <i class="fa fa-share"></i> 分享歌曲
+                        </button>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="analysis-title">
+                        <i class="fa fa-bar-chart"></i>
+                        歌曲分析
+                    </div>
+                    <div class="analysis-grid">
+                        <div class="analysis-item">
+                            <div class="analysis-number">${data.analysis.lyric_lines || 0}</div>
+                            <div class="analysis-label">歌词行数</div>
+                        </div>
+                        <div class="analysis-item">
+                            <div class="analysis-number">${data.analysis.word_count || 0}</div>
+                            <div class="analysis-label">字数统计</div>
+                        </div>
+                        <div class="analysis-item">
+                            <div class="analysis-number">${data.analysis.has_lyrics ? '有' : '无'}</div>
+                            <div class="analysis-label">歌词状态</div>
+                        </div>
+                        <div class="analysis-item">
+                            <div class="analysis-number">${data.source === 'local' ? '本地' : '在线'}</div>
+                            <div class="analysis-label">数据来源</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lyrics-section">
+                    <div class="lyrics-title">
+                        <i class="fa fa-file-text-o"></i>
+                        完整歌词
+                    </div>
+                    ${cleanLyric ? 
+                        `<div class="lyrics-content">${cleanLyric}</div>` :
+                        `<div class="no-lyrics">
+                            <i class="fa fa-exclamation-circle"></i>
+                            <p>暂无歌词信息</p>
+                        </div>`
+                    }
+                </div>
+            `;
+
+            container.innerHTML = html;
+            loading.style.display = 'none';
+            container.style.display = 'block';
+
+            // 存储歌词数据供下载使用
+            window.currentLyrics = cleanLyric;
+            window.currentSongInfo = {
+                name: name || data.name,
+                artist: artist || data.artist
+            };
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const container = document.getElementById('songDetailContainer');
+            const loading = document.getElementById('loadingContainer');
+
+            container.innerHTML = `
+                <div class="song-detail-card">
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fa fa-exclamation-triangle" style="font-size: 3rem; color: #f56565; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #2d3748; margin-bottom: 1rem;">加载失败</h3>
+                        <p style="color: #718096;">${message}</p>
+                        <a href="/" class="action-btn btn-primary" style="margin-top: 1rem;">
+                            <i class="fa fa-arrow-left"></i> 返回搜索
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            loading.style.display = 'none';
+            container.style.display = 'block';
+        }
+
+        // 获取播放链接
+        async function getPlayUrl(musicId, source) {
+            try {
+                const response = await fetch(`/play_url?id=${musicId}&source=${source}`);
+                const data = await response.json();
+                
+                if (data.url) {
+                    window.open(data.url, '_blank');
+                } else {
+                    alert('暂无播放链接');
+                }
+            } catch (error) {
+                console.error('获取播放链接失败:', error);
+                alert('获取播放链接失败');
+            }
+        }
+
+        // 下载歌词
+        function downloadLyrics() {
+            if (!window.currentLyrics) {
+                alert('暂无歌词可下载');
+                return;
+            }
+
+            const songInfo = window.currentSongInfo;
+            const filename = `${songInfo.name} - ${songInfo.artist}.txt`;
+            const content = `歌曲: ${songInfo.name}\n歌手: ${songInfo.artist}\n\n${window.currentLyrics}`;
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 分享歌曲
+        function shareSong() {
+            const songInfo = window.currentSongInfo;
+            const shareText = `我在听 ${songInfo.artist} 的《${songInfo.name}》，一起来听听吧！`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `${songInfo.name} - ${songInfo.artist}`,
+                    text: shareText,
+                    url: window.location.href
+                });
+            } else {
+                // 复制到剪贴板
+                navigator.clipboard.writeText(shareText + ' ' + window.location.href)
+                    .then(() => alert('分享链接已复制到剪贴板'))
+                    .catch(() => alert('分享功能暂不支持'));
+            }
+        }
+    </script>
+</body>
+</html>

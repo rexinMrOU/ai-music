@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐歌词搜索引擎</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #ffffff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 90%;
+            max-width: 800px;
+            backdrop-filter: blur(10px);
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .suggestions {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .suggestion-item:hover {
+            background: #f8f9ff;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .song-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .song-info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .song-details {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .song-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .song-name {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .song-meta {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .song-info-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .music-links {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .music-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .music-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            color: white;
+            text-decoration: none;
+        }
+
+        .duration {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .copyright-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            color: #856404;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+            
+            .title {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🎵 在线音乐搜索</h1>
+        
+        <div class="search-container">
+            <input type="text" id="searchBox" class="search-box" placeholder="输入歌曲名、歌手名或关键词搜索，例如：'周杰伦'、'青花瓷'">
+            <button class="search-btn" onclick="searchSongs()">
+                <i class="fas fa-search"></i>
+            </button>
+            
+            <div id="suggestions" class="suggestions"></div>
+        </div>
+
+        <div id="songDetails" class="song-details">
+            <div class="song-header">
+                <div id="songName" class="song-name"></div>
+                <div id="songMeta" class="song-meta"></div>
+            </div>
+            <div id="songInfo" class="song-info-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let searchTimeout;
+        
+        document.getElementById('searchBox').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                document.getElementById('suggestions').style.display = 'none';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                searchSuggestions(query);
+            }, 300);
+        });
+
+        document.getElementById('searchBox').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchSongs();
+            }
+        });
+
+        function searchSuggestions(query) {
+            fetch('/search_suggestions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({query: query})
+            })
+            .then(response => response.json())
+            .then(data => {
+                displaySuggestions(data.suggestions || []);
+            })
+            .catch(error => {
+                console.error('搜索错误:', error);
+            });
+        }
+
+        function displaySuggestions(suggestions) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            
+            if (suggestions.length === 0) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            suggestionsDiv.innerHTML = suggestions.map(song => {
+                const duration = song.duration ? formatDuration(song.duration) : '';
+                return `
+                    <div class="suggestion-item" onclick="selectSong('${song.id}', '${song.singer}', '${song.song}', '${song.album}', ${song.duration})">
+                        <div class="song-title">${song.song}</div>
+                        <div class="song-info">🎤 ${song.singer} ${song.album ? '• 📀 ' + song.album : ''} ${duration ? '• ⏱️ ' + duration : ''}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            suggestionsDiv.style.display = 'block';
+        }
+
+        function selectSong(id, singer, song, album, duration) {
+            document.getElementById('suggestions').style.display = 'none';
+            document.getElementById('searchBox').value = `${singer} - ${song}`;
+            
+            fetch('/get_song_details', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({id: id, singer: singer, song: song, album: album, duration: duration})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('错误: ' + data.error);
+                    return;
+                }
+                displaySongDetails(data);
+            })
+            .catch(error => {
+                console.error('获取歌曲详情错误:', error);
+                alert('获取歌曲详情失败');
+            });
+        }
+
+        function displaySongDetails(song) {
+            document.getElementById('songName').textContent = song.song;
+            document.getElementById('songMeta').innerHTML = `
+                🎤 演唱：${song.singer} ${song.album ? '• 📀 专辑：' + song.album : ''}
+                ${song.duration ? '• ⏱️ 时长：' + formatDuration(song.duration) : ''}
+            `;
+            
+            const songInfoContainer = document.getElementById('songInfo');
+            let linksHtml = '';
+            
+            if (song.links) {
+                linksHtml = `
+                    <div class="music-links">
+                        <a href="${song.links.qq_music}" target="_blank" class="music-link">🎵 QQ音乐</a>
+                        <a href="${song.links.netease}" target="_blank" class="music-link">🎧 网易云音乐</a>
+                        <a href="${song.links.kugou}" target="_blank" class="music-link">🎶 酷狗音乐</a>
+                    </div>
+                `;
+            }
+            
+            songInfoContainer.innerHTML = `
+                <div class="copyright-notice">
+                    📋 ${song.message || '歌曲信息展示'}
+                    <br><small>${song.suggestion || '点击下方链接前往官方音乐平台收听'}</small>
+                </div>
+                ${linksHtml}
+            `;
+            
+            document.getElementById('songDetails').style.display = 'block';
+        }
+
+        function formatDuration(duration) {
+            if (!duration) return '';
+            const minutes = Math.floor(duration / 60000);
+            const seconds = Math.floor((duration % 60000) / 1000);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function getNextLyric(lyric) {
+            // 移除歌词接龙功能的相关代码，因为线上版本不支持
+            alert('此功能在线上版本中暂不可用，请前往官方音乐平台查看完整歌词');
+        }
+
+        function showNextLyricResult(currentLyric, data) {
+            // 此函数在线上版本中不再使用
+        }
+
+        function searchSongs() {
+            const query = document.getElementById('searchBox').value.trim();
+            if (query) {
+                searchSuggestions(query);
+            }
+        }
+
+        // 点击其他地方隐藏建议
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('suggestions').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
